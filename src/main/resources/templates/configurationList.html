@@ -6,7 +6,8 @@
     <title>Document</title>
 </head>
 <body>
-    <a href="/configs/create">Добавить новый конфигурационный файл</a>
+    <a href="/configs/create">Добавить новый конфигурационный файл</a><br>
+    <a href="/logout">Выход</a>
     <h3>Список существующих конфигурационных файлов</h3>
     <div class="confList" th:if="${list != null}" th:each="file: ${list}">
         <a th:href="@{'/configs/read/' + ${file}}"><p th:text="${file}"></p></a>
