@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import group.okis.wg_admin.service.ConfigService;
@@ -23,15 +25,8 @@ public class MainController {
 
     @Autowired
     TerminalService terminalService;
-
-    @RequestMapping("/")
-    public ModelAndView getMainPage(){
-        ModelAndView mv = new ModelAndView();
-        mv.setViewName("index");
-        return mv;
-    }
-
-    @RequestMapping("/configs")
+    
+    @RequestMapping(value={"", "/", "/configs"})
     public ModelAndView getConfListPage(){
         ModelAndView mv = new ModelAndView();
 
@@ -46,8 +41,15 @@ public class MainController {
         return mv;
     }
 
-    @GetMapping("/configs/create/{fileName}")
-    public ModelAndView addFile(@PathVariable String fileName){
+    @GetMapping("/configs/create")
+    public ModelAndView createConfig(){
+        ModelAndView mv = new ModelAndView();
+        mv.setViewName("createConfig");
+        return mv;
+    }
+
+    @PostMapping("/configs/create")
+    public ModelAndView addFile(@RequestParam("configName") String fileName){
         fileName = getRightFileName(fileName);
 
         ModelAndView mv = new ModelAndView();
@@ -81,7 +83,7 @@ public class MainController {
             "PrivateKey = "+clientPrivateKey+"\n"+
             "\n[Peer]\n"+
             "PublicKey = "+serverPublicKey+"\n"+
-            "Endpoint = <server's ip>:51820\n"+
+            "Endpoint = "+System.getenv("serverIP")+":51820\n"+
             "AllowedIPs = 192.168.2.0/24";
 
             configService.writeUsingFileWriterWithoutWorkdir("/app/clientConfigs/client"+fileName, clientConfigData);

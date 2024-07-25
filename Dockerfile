@@ -16,8 +16,11 @@ RUN apt-get install -y wireguard
 RUN mkdir -p /app/clientConfigs
 RUN chmod 755 /app/clientConfigs
 
-COPY --from=build /app/target/wg-admin-0.0.1-SNAPSHOT.jar /app/wg-admin-0.0.1-SNAPSHOT.jar
+COPY --from=build /app/target/WG-SAP-0.1.jar /app/WG-SAP-0.1.jar
 
 EXPOSE 5000
+EXPOSE 51820
 
-CMD cd /app/;umask 077; wg genkey | tee Server_PrivateKey | wg pubkey > Server_PublicKey;java -jar /app/wg-admin-0.0.1-SNAPSHOT.jar
+ENV serverIP localhost
+
+CMD cd /app/;umask 077; wg genkey | tee Server_PrivateKey | wg pubkey > Server_PublicKey;java -jar /app/WG-SAP-0.1.jar
