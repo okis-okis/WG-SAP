@@ -8,7 +8,7 @@
 <body>
     <h3>Список существующих конфигурационных файлов</h3>
     <div class="confList" th:if="${list != null}" th:each="file: ${list}">
-        <a href="/configs/read/${file}"><p th:text="${file}"></p></a>
+        <a th:href="@{'/configs/read/' + ${file}}"><p th:text="${file}"></p></a>
     </div>
 </body>
 </html>

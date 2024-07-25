@@ -51,6 +51,10 @@ public class ConfigService {
     }
 
     public void createFileWithoutExtension(String fileName) throws IOException{
+        createFileWithoutExtensionAndWorkdir(workdir, fileName);
+    }
+
+    public void createFileWithoutExtensionAndWorkdir(String workdir, String fileName) throws IOException{
         File myObj = new File(workdir+fileName);
         if (myObj.createNewFile()) {
             System.out.println("File created: " + myObj.getName());
@@ -84,7 +88,12 @@ public class ConfigService {
 
     public void writeUsingFileWriter(String fileName, String data) 
     throws IOException{
-        File file = new File(workdir+fileName+"."+fileExtension);
+        writeUsingFileWriterWithoutWorkdir(workdir+fileName, data);
+    }
+
+    public void writeUsingFileWriterWithoutWorkdir(String fileName, String data) 
+    throws IOException{
+        File file = new File(fileName+"."+fileExtension);
         FileWriter fr = new FileWriter(file);
         fr.write(data);
         fr.close();

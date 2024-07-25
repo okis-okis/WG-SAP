@@ -8,11 +8,11 @@
 <body>
     <h3>Название конфигурационного файла (сервер): <span th:text="${fileName}"></span></h3>
     <h4>Содержимое:</h4>
-    <p th:text="${content}"></p>
+    <p th:utext="${content}"></p>
 
     <hr>
     <h3>Клиент</h3>
     <h4>Содержимое:</h4>
-    <p th:text="${clientConfig}"></p>
+    <p th:utext="${clientConfig}"></p>
 </body>
 </html>

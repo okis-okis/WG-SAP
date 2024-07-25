@@ -48,10 +48,44 @@ public class MainController {
 
     @GetMapping("/configs/create/{fileName}")
     public ModelAndView addFile(@PathVariable String fileName){
+        fileName = getRightFileName(fileName);
+
         ModelAndView mv = new ModelAndView();
 
         try{
+            terminalService.runCommand("/app/", "wg genkey | tee "+fileName+"_PrivateKey | wg pubkey > "+fileName+"_PublicKey");
+
+            String serverPrivateKey     = configService.readFileWithoutExtensionAndWorkdir("/app/Server_PrivateKey");
+            String serverPublicKey      = configService.readFileWithoutExtensionAndWorkdir("/app/Server_PublicKey");
+            String clientPublicKey      = configService.readFileWithoutExtensionAndWorkdir("/app/"+fileName+"_PublicKey");
+            String clientPrivateKey     = configService.readFileWithoutExtensionAndWorkdir("/app/"+fileName+"_PrivateKey");
+
+       
             configService.createFile(fileName);
+
+            String data = "[Interface]\n"+
+            "Address = 192.168.2.1\n"+
+            "PrivateKey = "+serverPrivateKey+"\n"+
+            "ListenPort = 51820\n"+
+            "\n"+
+            "[Peer]\n"+
+            "PublicKey = "+clientPublicKey+"\n"+
+            "AllowedIPs = 192.168.2."+counter;
+
+            configService.writeUsingFileWriter(fileName, data);
+
+            configService.createFileWithoutExtensionAndWorkdir("/app/clientConfigs/", "client"+fileName+".conf");
+
+            String clientConfigData = "[Interface]\n"+
+            "Address = 192.168.2."+(counter++)+"\n"+
+            "PrivateKey = "+clientPrivateKey+"\n"+
+            "\n[Peer]\n"+
+            "PublicKey = "+serverPublicKey+"\n"+
+            "Endpoint = <server's ip>:51820\n"+
+            "AllowedIPs = 192.168.2.0/24";
+
+            configService.writeUsingFileWriterWithoutWorkdir("/app/clientConfigs/client"+fileName, clientConfigData);
+        
             mv.addObject("result", "Конфигурационный файл был успешно создан");
         }catch(Exception e){
             mv.addObject("result", "При создании конфигурационного файла произошла ошибка!");
@@ -64,6 +98,8 @@ public class MainController {
 
     @GetMapping("/configs/delete/{fileName}")
     public ModelAndView deleteFile(@PathVariable String fileName){
+        fileName = getRightFileName(fileName);
+
         ModelAndView mv = new ModelAndView();
 
         try{
@@ -73,68 +109,31 @@ public class MainController {
             mv.addObject("result", "При удалении конфигурационного файла произошла ошибка!");
         }
 
-        mv.setViewName("success");
-        
-        return mv;
-    }
-
-    @GetMapping("/configs/write/{fileName}")
-    public ModelAndView writeToFileConfigData(@PathVariable String fileName){
-        ModelAndView mv = new ModelAndView();
-
-        // terminalService.runCommand("/app/", "wg genkey | tee "+fileName+"_PrivateKey | wg pubkey > "+fileName+"_PublicKey");
-
-        String serverPrivateKey = configService.readFileWithoutExtensionAndWorkdir("/app/Server_PrivateKey");
-        String serverPublicKey = configService.readFileWithoutExtensionAndWorkdir("/app/Server_PublicKey");
-        String clientPublicKey = configService.readFileWithoutExtensionAndWorkdir("/app/"+fileName+"_PublicKey");
-        String clientPrivateKey = configService.readFileWithoutExtensionAndWorkdir("/app/"+fileName+"_PrivateKey");
-
-        try{
-            String data = "[Interface]\n"+
-            "Address = 192.168.2.1\n"+
-            "PrivateKey = "+serverPrivateKey+"\n"+
-            "ListenPort = 51820\n"+
-            "\n"+
-            "[Peer]\n"+
-            "PublicKey = "+clientPublicKey+"\n"+
-            "AllowedIPs = 192.168.2."+counter;
-
-            configService.writeUsingFileWriter(fileName, data);
-
-            configService.createFile("client"+fileName);
-
-            String clientConfigData = "[Interface]\n"+
-            "Address = 192.168.2."+(counter++)+"\n"+
-            "PrivateKey = "+clientPrivateKey+"\n"+
-            "\n[Peer]\n"+
-            "PublicKey = "+serverPublicKey+"\n"+
-            "Endpoint = <server's ip>:51820\n"+
-            "AllowedIPs = 192.168.2.0/24";
-
-            configService.writeUsingFileWriter("client"+fileName, clientConfigData);
-
-            mv.addObject("result", "Конфигурационный файл был успешно обновлён. Настройка произведена");
-        }catch(Exception e){
-            mv.addObject("result", "Ошибка настройки конфигурации файла!");
-        }
-
-        mv.setViewName("success");
+        mv.setViewName("result");
         
         return mv;
     }
 
     @GetMapping("/configs/read/{fileName}")
     public ModelAndView readFile(@PathVariable String fileName){
+        fileName = getRightFileName(fileName);
+
         ModelAndView mv = new ModelAndView();
 
         mv.addObject("fileName", fileName);
-        mv.addObject("content", configService.readFile(fileName));
+        mv.addObject("content", configService.readFile(fileName).replace("\n", "<br>"));
 
-        String clientConfig = "";
-        mv.addObject("clientConfig", clientConfig);
+        String clientConfig = configService.readFileWithoutExtensionAndWorkdir("/app/clientConfigs/client"+fileName+".conf");
+        mv.addObject("clientConfig", clientConfig.replace("\n", "<br>"));
 
         mv.setViewName("configFileContent");
         
         return mv;
+    }
+
+    private String getRightFileName(String fileName){
+        if(fileName.contains(".conf"))
+            return fileName.replace(".conf", "");
+        return fileName;
     }
 }

@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>group.okis</groupId>
-	<artifactId>wg-admin</artifactId>
+	<artifactId>WG-SAP</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>wg-admin</name>
-	<description>Demo project for Spring Boot</description>
+	<name>WG-SAP</name>
+	<description>Security admin panel for WireGuard</description>
 	<url/>
 	<licenses>
 		<license/>
