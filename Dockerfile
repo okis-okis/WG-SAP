@@ -12,9 +12,11 @@ RUN mvn -f /app/pom.xml clean package
 FROM maven:3.9.8-sapmachine-22
 
 RUN apt-get update
+RUN apt-get upgrade -y
 RUN apt-get install -y wireguard
 RUN mkdir -p /app/clientConfigs
 RUN chmod 755 /app/clientConfigs
+RUN sysctl net.ipv4.ip_forward=1
 
 COPY --from=build /app/target/WG-SAP-0.1.jar /app/WG-SAP-0.1.jar
 

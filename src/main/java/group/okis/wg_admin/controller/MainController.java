@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
@@ -48,7 +47,7 @@ public class MainController {
         return mv;
     }
 
-    @PostMapping("/configs/create")
+    @GetMapping("/configs/create/conf")
     public ModelAndView addFile(@RequestParam("configName") String fileName){
         fileName = getRightFileName(fileName);
 
@@ -62,29 +61,35 @@ public class MainController {
             String clientPublicKey      = configService.readFileWithoutExtensionAndWorkdir("/app/"+fileName+"_PublicKey");
             String clientPrivateKey     = configService.readFileWithoutExtensionAndWorkdir("/app/"+fileName+"_PrivateKey");
 
-       
             configService.createFile(fileName);
 
             String data = "[Interface]\n"+
-            "Address = 192.168.2.1\n"+
             "PrivateKey = "+serverPrivateKey+"\n"+
+            "Address = 10.0.0.1/24\n"+
+            "PostUp = iptables -A FORWARD -i "+fileName+" -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE\n"+
+            "PostDown = iptables -D FORWARD -i "+fileName+" -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE\n"+
             "ListenPort = 51820\n"+
             "\n"+
             "[Peer]\n"+
             "PublicKey = "+clientPublicKey+"\n"+
-            "AllowedIPs = 192.168.2."+counter;
+            "AllowedIPs = 10.0.0."+counter+"/32";
 
             configService.writeUsingFileWriter(fileName, data);
+
+            terminalService.runCommand("/app/", "ip route list default");
+            terminalService.runCommand("/app/", "wg-quick up "+fileName);
+            terminalService.runCommand("/app/", "systemctl enable wg-quick@"+fileName);
 
             configService.createFileWithoutExtensionAndWorkdir("/app/clientConfigs/", "client"+fileName+".conf");
 
             String clientConfigData = "[Interface]\n"+
-            "Address = 192.168.2."+(counter++)+"\n"+
+            "Address = 10.0.0."+(counter++)+"\n"+
             "PrivateKey = "+clientPrivateKey+"\n"+
+            "DNS = 1.1.1.1\n"+
             "\n[Peer]\n"+
             "PublicKey = "+serverPublicKey+"\n"+
             "Endpoint = "+System.getenv("serverIP")+":51820\n"+
-            "AllowedIPs = 192.168.2.0/24";
+            "AllowedIPs = 0.0.0.0/0, ::/0";
 
             configService.writeUsingFileWriterWithoutWorkdir("/app/clientConfigs/client"+fileName, clientConfigData);
         
